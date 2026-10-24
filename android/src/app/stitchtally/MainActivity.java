@@ -110,9 +110,10 @@ public class MainActivity extends Activity {
         if (requestCode == REQ_EXPORT && pendingExport != null) {
             try (OutputStream out = getContentResolver().openOutputStream(uri, "wt")) {
                 out.write(pendingExport.getBytes(StandardCharsets.UTF_8));
-                toast("Backup saved");
+                toast("Sync file saved");
+                web.evaluateJavascript("window.stitchExported && stitchExported()", null);
             } catch (Exception e) {
-                toast("Could not save the backup: " + e.getMessage());
+                toast("Could not save the sync file: " + e.getMessage());
             }
             pendingExport = null;
         } else if (requestCode == REQ_IMPORT) {
@@ -159,11 +160,11 @@ public class MainActivity extends Activity {
         public void exportBackup(String json) {
             runOnUiThread(() -> {
                 pendingExport = json;
-                String stamp = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+                String stamp = new SimpleDateFormat("yyyy-MM-dd-HHmm", Locale.US).format(new Date());
                 Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                 i.addCategory(Intent.CATEGORY_OPENABLE);
                 i.setType("application/json");
-                i.putExtra(Intent.EXTRA_TITLE, "stitch-tally-backup-" + stamp + ".json");
+                i.putExtra(Intent.EXTRA_TITLE, "stitch-tally-" + stamp + ".json");
                 startActivityForResult(i, REQ_EXPORT);
             });
         }

@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "app-page",
+      "name": "stitch-app",
       "runtimeExecutable": "powershell",
       "runtimeArgs": ["-NoProfile", "-File", "tools\\serve.ps1", "-Root", "app"],
       "port": 8765

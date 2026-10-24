@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Stitch Tally</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Stitch Tally">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#e9ece6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141918" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
@@ -793,7 +801,15 @@ app.addEventListener("input", e => {
   clearTimeout(noteTimer); notePid = p.id; noteTimer = setTimeout(flushNotes, 400);
 });
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape" && !sheet.hidden) closeSheet();
+  if (e.key === "Escape" && !sheet.hidden) return closeSheet();
+  // Keyboard or Bluetooth page-turner pedal: Space / → / ↓ / Page Down adds a row, ← / ↑ / Page Up removes one.
+  const p = proj();
+  if (!p || !sheet.hidden || e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.closest && e.target.closest("input, textarea, select, button")) return;
+  const delta = { " ": 1, ArrowRight: 1, ArrowDown: 1, PageDown: 1, ArrowLeft: -1, ArrowUp: -1, PageUp: -1 }[e.key];
+  if (!delta) return;
+  e.preventDefault();
+  count(mainOf(p).id, delta);
 });
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) flushAll();
@@ -807,6 +823,9 @@ if (cached?.projects) state.projects = cached.projects;
 if (cached?.deleted) state.deleted = cached.deleted;
 render();
 if (native && settings.wake) setWake(true);
+if (!native && "serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
 setInterval(tick, 1000);
 initSync();
 })();

@@ -12,7 +12,9 @@ while ($l.IsListening) {
     $file = Join-Path $Root $path
     if (Test-Path $file -PathType Leaf) {
         $bytes = [IO.File]::ReadAllBytes($file)
-        $ctx.Response.ContentType = if ($file -like "*.html") { "text/html; charset=utf-8" } else { "application/octet-stream" }
+        $types = @{ ".html" = "text/html; charset=utf-8"; ".js" = "text/javascript"; ".webmanifest" = "application/manifest+json"; ".png" = "image/png"; ".json" = "application/json" }
+        $ext = [IO.Path]::GetExtension($file)
+        $ctx.Response.ContentType = if ($types[$ext]) { $types[$ext] } else { "application/octet-stream" }
         $ctx.Response.OutputStream.Write($bytes, 0, $bytes.Length)
     } else { $ctx.Response.StatusCode = 404 }
     $ctx.Response.Close()

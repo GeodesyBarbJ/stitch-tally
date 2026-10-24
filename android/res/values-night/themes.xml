@@ -8,6 +8,6 @@
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:colorAccent">@color/accent</item>
     </style>
-    <color name="bg">#141918</color>
-    <color name="accent">#E57BA3</color>
+    <color name="bg">#22160F</color>
+    <color name="accent">#498D75</color>
 </resources>

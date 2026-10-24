@@ -1,6 +1,6 @@
 // Offline support for the installed web app (iPad). Not used inside the Android app.
 // Bump VERSION whenever app files change so devices pick up the new version.
-const VERSION = "stitch-tally-3";
+const VERSION = "stitch-tally-4";
 const APP_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icons/apple-touch-icon.png", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", e => {

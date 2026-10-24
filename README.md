@@ -52,11 +52,11 @@ device, so keep a recent sync file.
 ## Rebuilding after changes
 
 ```powershell
-& .\android\build.ps1 -VersionCode 3 -VersionName 1.2
+& .\android\build.ps1 -VersionCode 4 -VersionName 1.3
 ```
 
 Raise `-VersionCode` each time so the phone accepts it as an update, and tag the release in git
-(`git tag v1.2`) so you can tell which code is on the phone. When `app/` changes, also raise
+(`git tag v1.3`) so you can tell which code is on the phone. When `app/` changes, also raise
 `VERSION` in `app/sw.js` so the iPad picks up the new version.
 
 Pushing to `main` on GitHub publishes `app/` to the iPad address automatically

@@ -6,8 +6,10 @@ buttons count rows; on iPad a keyboard or Bluetooth page-turner pedal can (Space
 
 ## Install on your phone (Android)
 
-1. Copy `StitchTally.apk` to the phone (USB cable, or open it from OneDrive on the phone).
-2. Tap the file. Android asks to allow installing apps from that source (Files, OneDrive): allow it.
+1. Get `StitchTally.apk` onto the phone: by USB cable, or put it in a cloud drive (Proton Drive,
+   OneDrive, Google Drive…) and open it from that drive's app on the phone.
+2. Tap the file. Android asks to allow installing apps from that source (Files, or the drive's
+   app): allow it.
 3. Tap **Install**. Play Protect may warn that it does not know the app; choose **Install anyway**.
 
 ## Install on the iPad
@@ -16,17 +18,23 @@ buttons count rows; on iPad a keyboard or Bluetooth page-turner pedal can (Space
 2. Tap **Share**, then **Add to Home Screen**.
 3. Open Stitch Tally from the Home Screen icon. It works offline after the first visit.
 
-## Syncing between phone and iPad (OneDrive)
+## Syncing between phone and iPad
 
-Each device keeps its own copy of your projects. To move them across:
+Each device keeps its own copy of your projects. To move them across, use any folder both
+devices can reach, such as a cloud drive (Proton Drive, OneDrive, Google Drive…):
 
-1. On the device you knitted on, tap **Save sync file** and save it to OneDrive.
-   On iPad, choose **Save to Files** in the share sheet and pick OneDrive.
-2. On the other device, tap **Load sync file** and pick the newest file from OneDrive.
+1. On the device you knitted on, tap **Save sync file** and save it to the shared folder.
+   On iPad, choose **Save to Files** in the share sheet and pick the folder there.
+2. On the other device, tap **Load sync file** and pick the newest file from the shared folder.
+
+If your drive does not show up in the save or open dialog, save the file on the device first
+(Downloads on Android, "On My iPad" on iPad) and upload it with the drive's own app. On the other
+device, download it with the drive's app, then load it from there.
 
 Loading keeps the newest version of each project and also applies deletions. A good habit:
 load before you start knitting on a device, save when you put it down. The home screen shows
-when you last saved and loaded. Old sync files can be deleted from OneDrive at any time.
+when you last saved and loaded. File names include the date and time, so the newest is easy to
+spot; old sync files can be deleted at any time.
 
 Uninstalling the Android app or removing the iPad Home Screen app deletes the projects on that
 device, so keep a recent sync file.

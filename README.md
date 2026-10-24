@@ -12,7 +12,7 @@ buttons count rows; on iPad a keyboard or Bluetooth page-turner pedal can (Space
 
 ## Install on the iPad
 
-1. Open the app's web address in **Safari**.
+1. Open **https://geodesybarbj.github.io/stitch-tally/** in **Safari**.
 2. Tap **Share**, then **Add to Home Screen**.
 3. Open Stitch Tally from the Home Screen icon. It works offline after the first visit.
 
@@ -50,6 +50,10 @@ device, so keep a recent sync file.
 Raise `-VersionCode` each time so the phone accepts it as an update, and tag the release in git
 (`git tag v1.2`) so you can tell which code is on the phone. When `app/` changes, also raise
 `VERSION` in `app/sw.js` so the iPad picks up the new version.
+
+Pushing to `main` on GitHub publishes `app/` to the iPad address automatically
+(`.github/workflows/pages.yml`). The iPad loads the new version the next time Stitch Tally is
+opened with an internet connection.
 
 Keep `android/stitchtally.keystore` and `android/keystore.properties`: updates must be signed with
 the same key, or Android refuses to install them over the existing app. Git ignores both files on

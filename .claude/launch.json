@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "app-page",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-File", "tools\\serve.ps1", "-Root", "android\\assets"],
+      "port": 8765
+    }
+  ]
+}

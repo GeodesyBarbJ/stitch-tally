@@ -1,0 +1,8 @@
+# Build output (rebuild with android/build.ps1)
+android/build/
+*.apk
+*.idsig
+
+# Signing key and its password: never commit these. Back them up separately.
+*.keystore
+keystore.properties

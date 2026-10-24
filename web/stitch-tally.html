@@ -1,0 +1,677 @@
+<title>Stitch Tally</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one-column phone tool. Sticky project bar, timer strip, one giant tap-to-count card, compact secondary counters, then notes and session log. */
+:root {
+  --bg: #e9ece6;
+  --surface: #f8f9f5;
+  --sunk: #dfe3db;
+  --ink: #1d2523;
+  --muted: #5c6862;
+  --line: #ccd3ca;
+  --accent: #9e2f5b;
+  --accent-ink: #ffffff;
+  --accent-soft: #f2dbe4;
+  --moss: #4b6a43;
+  --moss-soft: #dbe6d4;
+  --danger: #b0322a;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --r: 18px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141918; --surface: #1d2422; --sunk: #262e2c; --ink: #ebefe9; --muted: #9aa6a0; --line: #313a37;
+    --accent: #e57ba3; --accent-ink: #2b0d1a; --accent-soft: #3b2230; --moss: #9fc290; --moss-soft: #263423; --danger: #f08a80;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141918; --surface: #1d2422; --sunk: #262e2c; --ink: #ebefe9; --muted: #9aa6a0; --line: #313a37;
+  --accent: #e57ba3; --accent-ink: #2b0d1a; --accent-soft: #3b2230; --moss: #9fc290; --moss-soft: #263423; --danger: #f08a80;
+  color-scheme: dark;
+}
+html, body { min-height: 100%; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-tap-highlight-color: transparent;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 560px; margin: 0 auto; padding-block: 8px 48px; display: flex; flex-direction: column; gap: 16px; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; touch-action: manipulation; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+.label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.num { font-family: var(--display); font-variant-numeric: tabular-nums; }
+
+/* Top bar */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; align-items: center; gap: 8px; padding-block: 8px; }
+.bar h1 { flex: 1; min-width: 0; font-size: 22px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar .title-btn { flex: 1; min-width: 0; text-align: left; padding: 6px 0; }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.icon-btn:active { background: var(--sunk); }
+.icon-btn[disabled] { opacity: 0.35; }
+.icon-btn svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sync { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.sync i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.sync[data-mode="cloud"] i { background: var(--moss); }
+.sync[data-mode="error"] i { background: var(--danger); }
+
+/* Brand header on list */
+.brand { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding-block: 16px 4px; }
+.brand h1 { font-size: 34px; font-weight: 800; line-height: 1; }
+.brand h1 span { color: var(--accent); }
+
+/* Project list */
+.plist { display: flex; flex-direction: column; gap: 10px; }
+.pcard { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; }
+.pcard:active { background: var(--sunk); }
+.pcard h2 { font-size: 20px; font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+.pcard .meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: 14px; }
+.pcard .rowbig { font-size: 28px; font-weight: 800; line-height: 1; text-align: right; }
+.pcard .rowbig small { display: block; font-family: var(--body); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: var(--moss-soft); color: var(--moss); }
+.chip.ex { background: var(--sunk); color: var(--muted); }
+.chip.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.25; } }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 20px; border-radius: 99px; font-weight: 700; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { border: 1.5px solid var(--line); background: var(--surface); }
+.btn.danger { color: var(--danger); border: 1.5px solid var(--line); background: var(--surface); }
+.btn.block { width: 100%; }
+.btn:active { transform: scale(0.98); }
+
+.empty { background: var(--surface); border: 1.5px dashed var(--line); border-radius: var(--r); padding: 28px 20px; display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.empty h2 { font-size: 22px; }
+.empty p { margin: 0; color: var(--muted); max-width: 40ch; }
+.empty .row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Timer */
+.timer { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 14px 14px 18px; }
+.timer .t-val { font-size: 34px; font-weight: 700; line-height: 1.05; }
+.timer .t-sub { grid-column: 1; font-size: 14px; color: var(--muted); }
+.timer .t-btn { grid-row: 1 / span 3; grid-column: 2; width: 64px; height: 64px; border-radius: 50%; background: var(--moss); color: var(--surface); display: grid; place-items: center; }
+.timer .t-btn svg { width: 28px; height: 28px; fill: currentColor; }
+.timer.running { border-color: var(--moss); }
+.timer.running .t-val { color: var(--moss); }
+
+/* Main counter */
+.main { position: relative; border-radius: 24px; background: var(--accent); color: var(--accent-ink); overflow: hidden; }
+.main::before { /* knit stitch V columns */
+  content: ""; position: absolute; inset: 0 0 auto; height: 30px; background: var(--accent-ink); opacity: 0.16;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='15'%3E%3Cpath d='M1 1 Q4 13 8 14 M15 1 Q12 13 8 14' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x 4px 7px / 16px 15px;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='15'%3E%3Cpath d='M1 1 Q4 13 8 14 M15 1 Q12 13 8 14' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x 4px 7px / 16px 15px;
+}
+.main .plus { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 44px 16px 20px; gap: 4px; color: inherit; }
+.main .plus .label { color: inherit; opacity: 0.8; }
+.main .big { font-size: clamp(96px, 34vw, 150px); font-weight: 800; line-height: 0.9; letter-spacing: -0.04em; }
+.main .sub { font-size: 16px; opacity: 0.85; min-height: 1.45em; }
+.main .tap-hint { font-size: 13px; opacity: 0.7; }
+.main .controls { display: flex; gap: 8px; padding: 0 12px 12px; }
+.main .controls button { flex: 1; min-height: 52px; border-radius: 16px; background: color-mix(in srgb, var(--accent-ink) 16%, transparent); color: inherit; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.main .controls button:active { background: color-mix(in srgb, var(--accent-ink) 28%, transparent); }
+.bump { animation: bump 0.18s ease-out; }
+@keyframes bump { 40% { transform: scale(1.07); } }
+
+/* Secondary counters */
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.section-head h2 { font-size: 19px; }
+.clist { display: flex; flex-direction: column; gap: 8px; }
+.ccard { display: grid; grid-template-columns: 56px 1fr 56px; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 8px; }
+.ccard .step { height: 56px; border-radius: 14px; background: var(--sunk); font-size: 28px; font-weight: 700; font-family: var(--display); }
+.ccard .step.inc { background: var(--accent-soft); color: var(--accent); }
+.ccard .step:active { filter: brightness(0.92); }
+.ccard .mid { text-align: center; min-width: 0; padding: 2px 0; border-radius: 12px; }
+.ccard .mid:active { background: var(--sunk); }
+.ccard .cname { font-size: 14px; font-weight: 700; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.ccard .cval { font-size: 34px; font-weight: 800; line-height: 1.05; }
+.ccard .csub { font-size: 13px; color: var(--muted); }
+.ccard.done { border-color: var(--moss); }
+.ccard.done .csub { color: var(--moss); font-weight: 700; }
+.link-ic { width: 14px; height: 14px; stroke: var(--accent); fill: none; stroke-width: 2.4; stroke-linecap: round; flex: none; }
+.add-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.add-row .btn { flex: 1; }
+
+/* Notes */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field input, .field textarea { font: inherit; color: var(--ink); background: var(--bg); border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px; width: 100%; box-sizing: border-box; }
+.field textarea { min-height: 140px; resize: vertical; line-height: 1.5; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 380px) { .grid2 { grid-template-columns: 1fr; } }
+
+/* Sessions */
+.slist { display: flex; flex-direction: column; }
+.srow { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 15px; }
+.srow:first-child { border-top: 0; }
+.srow .when { color: var(--muted); }
+.srow .num { text-align: right; min-width: 4.5em; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.stats div { display: flex; flex-direction: column; }
+.stats b { font-family: var(--display); font-size: 24px; font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.foot { font-size: 13px; color: var(--muted); text-align: center; }
+
+/* Sheet */
+.sheet { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
+.sheet .back { position: absolute; inset: 0; background: rgb(0 0 0 / 0.45); }
+.sheet .panel-s { position: relative; width: 100%; max-width: 560px; max-height: 88%; overflow: auto; background: var(--surface); border-radius: 24px 24px 0 0; box-sizing: border-box;
+  padding: 20px max(20px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 14px; animation: rise 0.2s ease-out; }
+.sheet h2 { font-size: 22px; }
+@keyframes rise { from { transform: translateY(30px); opacity: 0; } }
+.check { display: flex; gap: 12px; align-items: flex-start; padding: 4px 0; }
+.check input { width: 22px; height: 22px; accent-color: var(--accent); margin: 2px 0 0; flex: none; }
+.check small { display: block; color: var(--muted); }
+.menu { display: flex; flex-direction: column; }
+.menu button { text-align: left; padding: 14px 4px; border-top: 1px solid var(--line); font-size: 17px; display: flex; justify-content: space-between; gap: 12px; }
+.menu button:first-child { border-top: 0; }
+.menu button.danger { color: var(--danger); }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 30; background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 99px; font-size: 15px; max-width: calc(100% - 48px); }
+@media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap" id="app"></div>
+<div class="sheet" id="sheet" hidden><div class="back" data-act="close-sheet"></div><div class="panel-s" id="sheetPanel" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+const LS_KEY = "stitchtally.v1";
+const app = document.getElementById("app");
+const sheet = document.getElementById("sheet");
+const sheetPanel = document.getElementById("sheetPanel");
+const toastEl = document.getElementById("toast");
+
+const state = { projects: {}, openId: null, undo: [], wake: false };
+const sync = { col: null, mode: "local", dirty: new Set(), timers: {}, chains: {}, ready: false };
+let wakeLock = null;
+
+// ---------- helpers ----------
+const newId = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const clone = o => JSON.parse(JSON.stringify(o));
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch {} };
+const ICON = {
+  back: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
+  undo: '<svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg>',
+  more: '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg>',
+  play: '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>',
+  link: '<svg class="link-ic" viewBox="0 0 24 24" aria-label="Linked to rows"><path d="M10 14a4 4 0 005.66 0l3-3a4 4 0 00-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 00-5.66 0l-3 3a4 4 0 005.66 5.66l1-1"/></svg>'
+};
+
+function fmtTime(ms) {
+  const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, sec = s % 60;
+  return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+}
+function fmtShort(ms) {
+  const m = Math.round(ms / 60000);
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`;
+}
+function rel(ts) {
+  if (!ts) return "never";
+  const d = (Date.now() - ts) / 1000;
+  if (d < 60) return "just now";
+  if (d < 3600) return `${Math.floor(d / 60)} min ago`;
+  if (d < 86400) return `${Math.floor(d / 3600)} h ago`;
+  const days = Math.floor(d / 86400);
+  return days === 1 ? "yesterday" : days < 30 ? `${days} days ago` : new Date(ts).toLocaleDateString();
+}
+function toast(msg) {
+  toastEl.textContent = msg; toastEl.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(() => (toastEl.hidden = true), 2200);
+}
+
+// ---------- model ----------
+function makeProject(name, example) {
+  const now = Date.now();
+  return {
+    id: newId(), name: name || "New project", example: !!example, createdAt: now, updatedAt: now, lastWorked: null,
+    mainId: "rows",
+    counters: [{ id: "rows", name: "Rows", value: 0, repeat: 0, linked: false }],
+    timer: { running: false, startedAt: null, elapsed: 0, startRows: 0 },
+    sessions: [], pattern: "", yarn: "", needles: "", notes: ""
+  };
+}
+function exampleProject() {
+  const p = makeProject("Ribbed beanie (example)", true);
+  const now = Date.now();
+  p.counters[0].value = 37;
+  p.counters.push({ id: newId(), name: "Cable repeat", value: 37, repeat: 8, linked: true });
+  p.counters.push({ id: newId(), name: "Decreases", value: 2, repeat: 0, linked: false, target: 7 });
+  p.timer.elapsed = 2 * 3600e3 + 14 * 60e3;
+  p.sessions = [
+    { start: now - 26 * 3600e3, ms: 52 * 60e3, rows: 15 },
+    { start: now - 50 * 3600e3, ms: 82 * 60e3, rows: 22 }
+  ];
+  p.lastWorked = now - 26 * 3600e3 + 52 * 60e3;
+  p.yarn = "Worsted merino, colour Heather, 1 skein";
+  p.needles = "4.5 mm circular, 40 cm";
+  p.pattern = "2x2 rib brim, then 8-row cable panel";
+  p.notes = "Brim: 2x2 rib for 12 rows.\nBody: cable on rows 3 and 7 of each repeat.\nCrown: decrease every other round, 7 times.";
+  return p;
+}
+const proj = () => state.projects[state.openId];
+const mainOf = p => p.counters.find(c => c.id === p.mainId) || p.counters[0];
+const elapsedOf = p => p.timer.elapsed + (p.timer.running ? Date.now() - p.timer.startedAt : 0);
+function rate(p) {
+  let ms = 0, rows = 0;
+  for (const s of p.sessions) { ms += s.ms; rows += s.rows; }
+  if (p.timer.running) { ms += Date.now() - p.timer.startedAt; rows += mainOf(p).value - p.timer.startRows; }
+  return ms > 5 * 60e3 && rows > 0 ? rows / (ms / 3600e3) : null;
+}
+function counterText(c) {
+  if (c.repeat > 0) {
+    if (c.value === 0) return { big: 0, sub: `of ${c.repeat}` };
+    const within = ((c.value - 1) % c.repeat) + 1, rep = Math.floor((c.value - 1) / c.repeat) + 1;
+    return { big: within, sub: `of ${c.repeat} · repeat ${rep}` };
+  }
+  if (c.target > 0) return { big: c.value, sub: c.value >= c.target ? `done · target ${c.target}` : `of ${c.target}`, done: c.value >= c.target };
+  return { big: c.value, sub: "" };
+}
+
+function touch(p) {
+  p.updatedAt = Date.now();
+  lsSave();
+  queueWrite(p.id);
+}
+
+// ---------- storage ----------
+function lsLoad() { try { const r = localStorage.getItem(LS_KEY); return r ? JSON.parse(r) : null; } catch { return null; } }
+function lsSave() { try { localStorage.setItem(LS_KEY, JSON.stringify({ projects: state.projects })); } catch {} }
+
+function setMode(mode) {
+  sync.mode = mode;
+  document.querySelectorAll(".sync").forEach(el => { el.dataset.mode = mode; el.lastChild.textContent = syncLabel(); });
+}
+const syncLabel = () => ({ cloud: "Saved to your account", local: "Saved on this device", error: "Not saving, check connection" }[sync.mode]);
+
+async function initSync() {
+  if (!window.claude?.use) { await sleep(800); if (!window.claude?.use) return setMode("local"); }
+  try {
+    const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+    if (!db || !user) return setMode("local");
+    const uid = await user.id();
+    if (!uid) return setMode("local");
+    sync.col = db.collection("data/users/" + uid);
+    sync.col.onSnapshot(onSnap, () => { sync.col = null; setMode("local"); });
+  } catch { setMode("local"); }
+}
+
+function onSnap(snap) {
+  if (!sync.ready && snap.metadata.fromCache) return; // wait for the definitive first view
+  const server = {};
+  for (const d of snap.docs) { const p = d.data(); if (p && p.id) server[p.id] = clone(p); }
+  if (!sync.ready) {
+    // First contact: upload projects that exist only on this device.
+    for (const id of Object.keys(state.projects)) if (!server[id]) queueWrite(id);
+  } else {
+    for (const id of Object.keys(state.projects)) if (!server[id] && !sync.dirty.has(id)) delete state.projects[id];
+  }
+  for (const [id, sp] of Object.entries(server)) {
+    const lp = state.projects[id];
+    if (sync.dirty.has(id)) continue;
+    if (!lp || sp.updatedAt >= lp.updatedAt) state.projects[id] = sp;
+  }
+  sync.ready = true;
+  if (sync.mode !== "cloud") setMode("cloud");
+  lsSave();
+  if (state.openId && !state.projects[state.openId]) { state.openId = null; render(); }
+  else if (state.openId) refreshProject(); else renderList();
+}
+
+function queueWrite(id) {
+  if (!sync.col) return;
+  sync.dirty.add(id);
+  clearTimeout(sync.timers[id]);
+  sync.timers[id] = setTimeout(() => flush(id), 700);
+}
+function flush(id) {
+  clearTimeout(sync.timers[id]); delete sync.timers[id];
+  if (!sync.col) return;
+  const col = sync.col;
+  sync.chains[id] = (sync.chains[id] || Promise.resolve()).then(async () => {
+    const write = () => state.projects[id] ? col.doc(id).set(clone(state.projects[id])) : col.doc(id).delete();
+    try { await write(); if (sync.mode === "error") setMode("cloud"); }
+    catch (e) {
+      if (e?.code === "unavailable") { await sleep(800 + Math.random() * 800); try { await write(); } catch { setMode("error"); } }
+      else setMode("error");
+    }
+    if (!sync.timers[id]) sync.dirty.delete(id);
+  });
+}
+function flushAll() { Object.keys(sync.timers).forEach(flush); }
+
+// ---------- actions ----------
+function count(cid, delta) {
+  const p = proj(); if (!p) return;
+  const c = p.counters.find(x => x.id === cid); if (!c) return;
+  if (delta < 0 && c.value === 0) return;
+  const changes = [[c.id, c.value]];
+  c.value = Math.max(0, c.value + delta);
+  if (c.id === p.mainId) for (const o of p.counters) {
+    if (o.linked && o.id !== c.id && !(delta < 0 && o.value === 0)) { changes.push([o.id, o.value]); o.value = Math.max(0, o.value + delta); }
+  }
+  state.undo.push({ pid: p.id, changes }); if (state.undo.length > 100) state.undo.shift();
+  p.lastWorked = Date.now();
+  buzz(delta > 0 ? 12 : [8, 40, 8]);
+  touch(p);
+  refreshCounters(c.id);
+}
+function undo() {
+  const u = state.undo.pop(); if (!u) return;
+  const p = state.projects[u.pid]; if (!p) return;
+  for (const [cid, v] of u.changes) { const c = p.counters.find(x => x.id === cid); if (c) c.value = v; }
+  touch(p); refreshCounters(); toast("Undone");
+}
+function toggleTimer() {
+  const p = proj(); const t = p.timer; const m = mainOf(p);
+  if (t.running) {
+    const ms = Date.now() - t.startedAt;
+    t.elapsed += ms;
+    if (ms >= 60e3) p.sessions.unshift({ start: t.startedAt, ms, rows: m.value - t.startRows });
+    p.sessions = p.sessions.slice(0, 60);
+    t.running = false; t.startedAt = null;
+    p.lastWorked = Date.now();
+  } else {
+    t.running = true; t.startedAt = Date.now(); t.startRows = m.value;
+  }
+  buzz(20);
+  touch(p); refreshProject();
+}
+async function setWake(on) {
+  state.wake = on;
+  try {
+    if (on && "wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen");
+    else if (wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch { if (on) toast("Your browser did not allow keeping the screen on"); state.wake = false; }
+}
+
+// ---------- rendering ----------
+function render() {
+  closeSheet();
+  if (state.openId && state.projects[state.openId]) renderProject(); else { state.openId = null; renderList(); }
+}
+
+function renderList() {
+  const list = Object.values(state.projects).sort((a, b) => (b.lastWorked || b.updatedAt) - (a.lastWorked || a.updatedAt));
+  app.innerHTML = `
+    <header class="brand">
+      <h1>Stitch<br><span>Tally</span></h1>
+      <div class="sync" data-mode="${sync.mode}"><i></i>${syncLabel()}</div>
+    </header>
+    ${list.length ? `<div class="plist">${list.map(p => {
+      const m = mainOf(p);
+      return `<button class="pcard" data-act="open" data-id="${p.id}">
+        <h2>${esc(p.name)}</h2>
+        <div class="rowbig num">${m.value}<small>${esc(m.name)}</small></div>
+        <div class="meta">
+          ${p.timer.running ? `<span class="chip live">Timer running</span>` : ""}
+          ${p.example ? `<span class="chip ex">Example</span>` : ""}
+          <span class="num" data-timer="${p.id}">${fmtTime(elapsedOf(p))}</span>
+          <span>${p.counters.length} counter${p.counters.length === 1 ? "" : "s"}</span>
+          <span>Worked on ${rel(p.lastWorked)}</span>
+        </div>
+      </button>`; }).join("")}</div>
+      <button class="btn primary block" data-act="new-project">New project</button>`
+    : `<div class="empty">
+        <h2>Cast on your first project</h2>
+        <p>Each project gets a row counter you tap anywhere to count, extra counters for repeats and decreases, a knitting timer and space for pattern notes.</p>
+        <div class="row">
+          <button class="btn primary" data-act="new-project">New project</button>
+          <button class="btn ghost" data-act="add-example">Show me an example</button>
+        </div>
+      </div>`}
+    <p class="foot">Tip: in Chrome, use the menu and choose “Add to Home screen” to open Stitch Tally like an app.</p>`;
+}
+
+function renderProject() {
+  const p = proj();
+  app.innerHTML = `
+    <header class="bar">
+      <button class="icon-btn" data-act="home" aria-label="All projects">${ICON.back}</button>
+      <button class="title-btn" data-act="rename"><h1 id="pTitle">${esc(p.name)}</h1></button>
+      <button class="icon-btn" data-act="undo" id="undoBtn" aria-label="Undo last count">${ICON.undo}</button>
+      <button class="icon-btn" data-act="project-menu" aria-label="Project options">${ICON.more}</button>
+    </header>
+    <section class="timer" id="timer"></section>
+    <section class="main" id="main"></section>
+    <section class="section-head"><h2>Counters</h2><span class="label">Tap a name to edit</span></section>
+    <div class="clist" id="clist"></div>
+    <div class="add-row"><button class="btn ghost" data-act="add-counter">Add counter</button></div>
+    <section class="panel">
+      <h2 style="font-size:19px">Pattern notes</h2>
+      <div class="field"><label class="label" for="f-pattern">Pattern</label><input id="f-pattern" data-field="pattern" value="${esc(p.pattern)}" placeholder="Name or link"></div>
+      <div class="grid2">
+        <div class="field"><label class="label" for="f-yarn">Yarn</label><input id="f-yarn" data-field="yarn" value="${esc(p.yarn)}" placeholder="Weight, colour, lot"></div>
+        <div class="field"><label class="label" for="f-needles">Needles</label><input id="f-needles" data-field="needles" value="${esc(p.needles)}" placeholder="Size, length"></div>
+      </div>
+      <div class="field"><label class="label" for="f-notes">Notes</label><textarea id="f-notes" data-field="notes" placeholder="Row-by-row instructions, changes you made, where you left off…">${esc(p.notes)}</textarea></div>
+    </section>
+    <section class="panel" id="sessions"></section>
+    <p class="foot"><span class="sync" data-mode="${sync.mode}" style="justify-content:center"><i></i>${syncLabel()}</span></p>`;
+  refreshProject();
+}
+
+function refreshProject() {
+  const p = proj(); if (!p) return;
+  const title = document.getElementById("pTitle"); if (!title) return renderProject();
+  title.textContent = p.name;
+  refreshTimer(); refreshCounters(); refreshSessions();
+  ["pattern", "yarn", "needles", "notes"].forEach(f => {
+    const el = app.querySelector(`[data-field="${f}"]`);
+    if (el && document.activeElement !== el && el.value !== p[f]) el.value = p[f] || "";
+  });
+}
+
+function refreshTimer() {
+  const p = proj(); const el = document.getElementById("timer"); if (!el) return;
+  const run = p.timer.running, r = rate(p);
+  el.className = "timer" + (run ? " running" : "");
+  el.innerHTML = `
+    <span class="label">${run ? "Knitting now" : "Knitting time"}</span>
+    <div class="t-val num" data-timer="${p.id}">${fmtTime(elapsedOf(p))}</div>
+    <div class="t-sub" id="tSub">${timerSub(p, r)}</div>
+    <button class="t-btn" data-act="timer" aria-label="${run ? "Pause timer" : "Start timer"}">${run ? ICON.pause : ICON.play}</button>`;
+}
+function timerSub(p, r) {
+  const bits = [];
+  if (p.timer.running) bits.push(`This session ${fmtTime(Date.now() - p.timer.startedAt)}`);
+  if (r) bits.push(`${r.toFixed(r < 10 ? 1 : 0)} rows/hour`);
+  if (!bits.length) bits.push("Start the timer when you pick up your needles");
+  return bits.join(" · ");
+}
+
+function refreshCounters(bumpId) {
+  const p = proj(); const mainEl = document.getElementById("main"); if (!mainEl) return;
+  const m = mainOf(p), mt = counterText(m);
+  mainEl.innerHTML = `
+    <button class="plus" data-act="inc" data-cid="${m.id}" aria-label="Add one ${esc(m.name)}">
+      <span class="label">${esc(m.name)}</span>
+      <span class="big num${bumpId === m.id ? " bump" : ""}">${mt.big}</span>
+      <span class="sub">${mt.sub || (m.value === 0 ? "Tap anywhere here to count a row" : "&nbsp;")}</span>
+    </button>
+    <div class="controls">
+      <button data-act="dec" data-cid="${m.id}" aria-label="Remove one ${esc(m.name)}">− 1</button>
+      <button data-act="edit-counter" data-cid="${m.id}">Edit</button>
+    </div>`;
+  const others = p.counters.filter(c => c.id !== m.id);
+  document.getElementById("clist").innerHTML = others.length ? others.map(c => {
+    const t = counterText(c);
+    return `<div class="ccard${t.done ? " done" : ""}">
+      <button class="step" data-act="dec" data-cid="${c.id}" aria-label="Remove one ${esc(c.name)}">−</button>
+      <button class="mid" data-act="edit-counter" data-cid="${c.id}">
+        <div class="cname">${c.linked ? ICON.link : ""}${esc(c.name)}</div>
+        <div class="cval num${bumpId === c.id || (bumpId === m.id && c.linked) ? " bump" : ""}">${t.big}</div>
+        <div class="csub">${t.sub || "&nbsp;"}</div>
+      </button>
+      <button class="step inc" data-act="inc" data-cid="${c.id}" aria-label="Add one ${esc(c.name)}">+</button>
+    </div>`; }).join("")
+    : `<p class="muted" style="margin:0">Add counters for pattern repeats, increases, decreases or the sleeve you are on. Link one to Rows and it moves whenever you count a row.</p>`;
+  const ub = document.getElementById("undoBtn"); if (ub) ub.disabled = !state.undo.some(u => u.pid === p.id);
+  const sub = document.getElementById("tSub"); if (sub) sub.textContent = timerSub(p, rate(p));
+}
+
+function refreshSessions() {
+  const p = proj(); const el = document.getElementById("sessions"); if (!el) return;
+  const total = elapsedOf(p), m = mainOf(p);
+  el.innerHTML = `
+    <h2 style="font-size:19px">Progress</h2>
+    <div class="stats">
+      <div><span class="label">Total time</span><b>${fmtShort(total)}</b></div>
+      <div><span class="label">${esc(m.name)}</span><b>${m.value}</b></div>
+      <div><span class="label">Sessions</span><b>${p.sessions.length}</b></div>
+    </div>
+    ${p.sessions.length ? `<div class="slist">${p.sessions.slice(0, 12).map(s => `
+      <div class="srow"><span class="when">${new Date(s.start).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}, ${new Date(s.start).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</span>
+      <span class="num">${fmtShort(s.ms)}</span><span class="num">${s.rows >= 0 ? "+" : ""}${s.rows} rows</span></div>`).join("")}</div>`
+    : `<p class="muted" style="margin:0">Each time you pause the timer, the session is saved here with the rows you knitted.</p>`}`;
+}
+
+function tick() {
+  if (document.hidden) return;
+  document.querySelectorAll("[data-timer]").forEach(el => {
+    const p = state.projects[el.dataset.timer]; if (p) el.textContent = fmtTime(elapsedOf(p));
+  });
+  const p = proj(); const sub = document.getElementById("tSub");
+  if (p && sub && p.timer.running) sub.textContent = timerSub(p, rate(p));
+}
+
+// ---------- sheets ----------
+function openSheet(html) { sheetPanel.innerHTML = html; sheet.hidden = false; const f = sheetPanel.querySelector("input:not([type=checkbox])"); if (f) setTimeout(() => f.focus(), 50); }
+function closeSheet() { sheet.hidden = true; sheetPanel.innerHTML = ""; }
+
+function newProjectSheet() {
+  openSheet(`<h2>New project</h2>
+    <form id="newForm" class="field" style="gap:14px">
+      <div class="field"><label class="label" for="np-name">Project name</label><input id="np-name" required maxlength="80" placeholder="Sock no. 2, Fair Isle yoke…"></div>
+      <button class="btn primary block" type="submit">Create project</button>
+    </form>`);
+  sheetPanel.querySelector("#newForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const p = makeProject(sheetPanel.querySelector("#np-name").value.trim());
+    state.projects[p.id] = p; touch(p); state.openId = p.id; render();
+  });
+}
+function renameSheet() {
+  const p = proj();
+  openSheet(`<h2>Rename project</h2>
+    <form id="rnForm" class="field" style="gap:14px">
+      <div class="field"><label class="label" for="rn-name">Project name</label><input id="rn-name" required maxlength="80" value="${esc(p.name)}"></div>
+      <button class="btn primary block" type="submit">Save</button>
+    </form>`);
+  sheetPanel.querySelector("#rnForm").addEventListener("submit", e => {
+    e.preventDefault(); p.name = sheetPanel.querySelector("#rn-name").value.trim() || p.name; p.example = false; touch(p); closeSheet(); refreshProject();
+  });
+}
+function projectMenu() {
+  const p = proj();
+  openSheet(`<h2>${esc(p.name)}</h2>
+    <div class="menu">
+      <button data-act="rename">Rename project</button>
+      <button data-act="toggle-wake">Keep screen on while knitting <span class="muted">${state.wake ? "On" : "Off"}</span></button>
+      <button data-act="reset-all">Reset all counters to 0</button>
+      <button data-act="delete-project" class="danger">Delete project</button>
+    </div>`);
+}
+function confirmSheet(title, body, okLabel, onOk) {
+  openSheet(`<h2>${title}</h2><p class="muted" style="margin:0">${body}</p>
+    <div class="add-row"><button class="btn ghost" data-act="close-sheet">Cancel</button><button class="btn primary" id="okBtn">${okLabel}</button></div>`);
+  sheetPanel.querySelector("#okBtn").addEventListener("click", onOk);
+}
+function counterSheet(cid) {
+  const p = proj(); const isNew = !cid;
+  const c = isNew ? { id: newId(), name: "", value: 0, repeat: 0, linked: false, target: 0 } : clone(p.counters.find(x => x.id === cid));
+  const isMain = c.id === p.mainId;
+  openSheet(`<h2>${isNew ? "New counter" : "Edit counter"}</h2>
+    <form id="cForm" style="display:flex;flex-direction:column;gap:14px">
+      <div class="field"><label class="label" for="c-name">Name</label><input id="c-name" required maxlength="40" value="${esc(c.name)}" placeholder="Pattern repeat, Increases, Sleeve…"></div>
+      <div class="grid2">
+        <div class="field"><label class="label" for="c-value">Current count</label><input id="c-value" type="number" inputmode="numeric" min="0" value="${c.value}"></div>
+        <div class="field"><label class="label" for="c-repeat">Repeat every</label><input id="c-repeat" type="number" inputmode="numeric" min="0" value="${c.repeat || ""}" placeholder="No repeat"></div>
+      </div>
+      <div class="field"><label class="label" for="c-target">Stop at (optional)</label><input id="c-target" type="number" inputmode="numeric" min="0" value="${c.target || ""}" placeholder="e.g. 7 decreases"></div>
+      ${isMain ? "" : `<label class="check"><input type="checkbox" id="c-linked" ${c.linked ? "checked" : ""}><span>Move with ${esc(mainOf(p).name)}<small>Counts up and down every time you count a row.</small></span></label>`}
+      <button class="btn primary block" type="submit">${isNew ? "Add counter" : "Save"}</button>
+      ${isNew || isMain ? "" : `<button class="btn danger block" type="button" id="cDel">Delete counter</button>`}
+    </form>`);
+  sheetPanel.querySelector("#cForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const q = s => sheetPanel.querySelector(s);
+    const prev = isNew ? null : p.counters.find(x => x.id === c.id);
+    const next = {
+      ...c, name: q("#c-name").value.trim() || "Counter",
+      value: Math.max(0, parseInt(q("#c-value").value, 10) || 0),
+      repeat: Math.max(0, parseInt(q("#c-repeat").value, 10) || 0),
+      target: Math.max(0, parseInt(q("#c-target").value, 10) || 0),
+      linked: isMain ? false : q("#c-linked").checked
+    };
+    if (prev && prev.value !== next.value) state.undo.push({ pid: p.id, changes: [[c.id, prev.value]] });
+    if (isNew) p.counters.push(next); else Object.assign(prev, next);
+    touch(p); closeSheet(); refreshCounters();
+  });
+  const del = sheetPanel.querySelector("#cDel");
+  if (del) del.addEventListener("click", () => {
+    if (del.dataset.armed) { p.counters = p.counters.filter(x => x.id !== c.id); touch(p); closeSheet(); refreshCounters(); toast("Counter deleted"); }
+    else { del.dataset.armed = "1"; del.textContent = "Tap again to delete"; }
+  });
+}
+
+// ---------- events ----------
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const act = b.dataset.act, p = proj();
+  switch (act) {
+    case "open": state.openId = b.dataset.id; state.undo = []; render(); window.scrollTo(0, 0); break;
+    case "home": flushAll(); state.openId = null; render(); window.scrollTo(0, 0); break;
+    case "new-project": newProjectSheet(); break;
+    case "add-example": { const x = exampleProject(); state.projects[x.id] = x; touch(x); render(); break; }
+    case "inc": count(b.dataset.cid, 1); break;
+    case "dec": count(b.dataset.cid, -1); break;
+    case "undo": undo(); break;
+    case "timer": toggleTimer(); break;
+    case "add-counter": counterSheet(null); break;
+    case "edit-counter": counterSheet(b.dataset.cid); break;
+    case "rename": renameSheet(); break;
+    case "project-menu": projectMenu(); break;
+    case "close-sheet": closeSheet(); break;
+    case "toggle-wake": setWake(!state.wake).then(() => { closeSheet(); toast(state.wake ? "Screen stays on while this is open" : "Screen can turn off again"); }); break;
+    case "reset-all": confirmSheet("Reset all counters?", `Every counter in ${esc(p.name)} goes back to 0. Your time and notes stay. You can undo this.`, "Reset", () => {
+      state.undo.push({ pid: p.id, changes: p.counters.map(c => [c.id, c.value]) });
+      p.counters.forEach(c => (c.value = 0)); touch(p); closeSheet(); refreshCounters();
+    }); break;
+    case "delete-project": confirmSheet("Delete this project?", `${esc(p.name)}, its counters, time and notes are removed from all your devices. This cannot be undone.`, "Delete", () => {
+      delete state.projects[p.id]; lsSave(); if (sync.col) { sync.dirty.add(p.id); flush(p.id); }
+      state.openId = null; render(); toast("Project deleted");
+    }); break;
+  }
+});
+let noteTimer;
+app.addEventListener("input", e => {
+  const f = e.target.dataset.field; const p = proj(); if (!f || !p) return;
+  p[f] = e.target.value;
+  clearTimeout(noteTimer); noteTimer = setTimeout(() => touch(p), 400);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && !sheet.hidden) closeSheet();
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) flushAll();
+  else { tick(); if (state.wake && !wakeLock) setWake(true); }
+});
+window.addEventListener("pagehide", flushAll);
+
+// ---------- boot ----------
+const cached = lsLoad();
+if (cached?.projects) state.projects = cached.projects;
+render();
+setInterval(tick, 1000);
+initSync();
+})();
+</script>

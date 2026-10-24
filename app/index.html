@@ -457,7 +457,7 @@ function renderList() {
       </div>`}
     ${sync.mode === "cloud" ? "" : `<section class="panel">
       <h2 style="font-size:19px">Sync and backup</h2>
-      <p class="muted" style="margin:0">Your projects are stored on this ${native ? "phone" : "device"}. To carry on knitting on another device, save a sync file to OneDrive here and load it there. Loading keeps the newest version of each project.</p>
+      <p class="muted" style="margin:0">Your projects are stored on this ${native ? "phone" : "device"}. To carry on knitting on another device, save a sync file here to a folder both devices can reach, like your cloud drive, and load it there. Loading keeps the newest version of each project.</p>
       <div class="add-row">
         <button class="btn ghost" data-act="export">Save sync file</button>
         <button class="btn ghost" data-act="import">Load sync file</button>
@@ -485,7 +485,7 @@ async function exportBackup() {
   if (native) return native.exportBackup(json);
   const name = syncFileName();
   const file = new File([json], name, { type: "application/json" });
-  // iPad/iPhone: the share sheet offers "Save to Files", where OneDrive appears as a location.
+  // iPad/iPhone: the share sheet offers "Save to Files", where cloud drives appear as locations.
   if (isIOS && navigator.canShare && navigator.canShare({ files: [file] })) {
     try { await navigator.share({ files: [file] }); markExported(); toast("Sync file saved"); }
     catch (e) { if (e && e.name !== "AbortError") toast("Could not share the file"); }

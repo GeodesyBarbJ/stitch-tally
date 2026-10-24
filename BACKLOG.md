@@ -13,6 +13,7 @@ move it to **Done** with the version it shipped in.
 
 ## Done
 
+- 1.2: Sync text no longer assumes OneDrive; any shared folder or cloud drive works.
 - 1.1: iPad web app (installable, offline), keyboard/pedal counting, OneDrive sync files that carry deletions.
 - 1.0: First Android release. Projects, row counter, linked/repeating counters, target counters,
   volume-button counting, timer with session log, pattern notes, backup save/restore.

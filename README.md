@@ -1,4 +1,4 @@
-# Stitch Tally
+﻿# Stitch Tally
 
 A knitting row counter for Android: projects, a tap-anywhere row counter, linked and repeating
 counters, volume-button counting, a knitting timer with a session log, and pattern notes.
@@ -6,7 +6,7 @@ counters, volume-button counting, a knitting timer with a session log, and patte
 ## Install on your phone
 
 1. Copy `StitchTally.apk` to the phone (USB cable, or open it from OneDrive on the phone).
-2. Tap the file. Android asks to allow installing apps from that source (Files, OneDrive…): allow it.
+2. Tap the file. Android asks to allow installing apps from that source (Files, OneDriveâ€¦): allow it.
 3. Tap **Install**. Play Protect may warn that it does not know the app; choose **Install anyway**.
 
 ## Your data
@@ -16,14 +16,15 @@ Uninstalling the app or clearing its storage deletes your projects.
 
 ## Project layout
 
-- `android/`: the Android app. `assets/index.html` is the app's page, `src/` the native part.
+- `app/`: the app page shared by the Android app and the iPad web app.
+- `android/`: the Android wrapper. `src/` holds the native part.
 - `web/stitch-tally.html`: the earlier web version, published on claude.ai.
 - `tools/serve.ps1`: serves the app page on http://localhost:8765 for testing in a browser.
 - `BACKLOG.md`: bugs and wishes to work on.
 
 ## Rebuilding after changes
 
-The app page is `android/assets/index.html`; the native part is `android/src/.../MainActivity.java`.
+The app page is `app/index.html` (shared by Android and iPad); the native part is `android/src/.../MainActivity.java`.
 
 ```powershell
 & .\android\build.ps1 -VersionCode 2 -VersionName 1.1

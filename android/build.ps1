@@ -1,4 +1,4 @@
-# Builds a signed StitchTally.apk with the plain Android SDK tools (no Gradle).
+﻿# Builds a signed StitchTally.apk with the plain Android SDK tools (no Gradle).
 # Usage:  powershell -ExecutionPolicy Bypass -File build.ps1 [-VersionCode 2 -VersionName 1.1]
 param([int]$VersionCode = 1, [string]$VersionName = "1.0")
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,7 @@ Run "$bt\aapt2.exe" @("compile", "--dir", "$root\res", "-o", "$out\res.zip")
 
 Write-Host "2/6 Linking resources, manifest and assets"
 Run "$bt\aapt2.exe" @("link", "-o", "$out\unsigned.apk", "-I", $androidJar,
-    "--manifest", "$root\AndroidManifest.xml", "-A", "$root\assets", "-R", "$out\res.zip",
+    "--manifest", "$root\AndroidManifest.xml", "-A", "$(Split-Path $root -Parent)\app", "-R", "$out\res.zip",
     "--java", "$out\gen", "--min-sdk-version", "26", "--target-sdk-version", "34",
     "--version-code", "$VersionCode", "--version-name", $VersionName, "--auto-add-overlay")
 
